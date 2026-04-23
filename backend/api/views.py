@@ -7,9 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Post, Profile, Follow
+from .models import Post, Comment, Like, Profile, Follow, Poll, PollOption, PollVote
 from .serializers import (
     RegistrationSerializer, LoginSerializer, PostSerializer,
+    CommentSerializer, LikeSerializer,
     UserProfileSerializer, AvatarUploadSerializer,
 )
 
@@ -61,8 +62,11 @@ class PostListCreateView(APIView):
     def get(self, request):
         posts = (
             Post.objects
-            .select_related('author', 'author__profile')
-            .prefetch_related('hashtags', 'media')
+            .select_related('author', 'author__profile', 'poll')
+            .prefetch_related(
+                'comments__author__profile', 'likes', 'hashtags',
+                'media', 'poll__options__votes',
+            )
             .order_by('-created_at')
         )
         return Response(PostSerializer(posts, many=True, context={'request': request}).data)
@@ -87,16 +91,10 @@ class PostDetailView(APIView):
         return Response(PostSerializer(post, context={'request': request}).data)
 
     def put(self, request, pk):
-        return self._update(request, pk, partial=False)
-
-    def patch(self, request, pk):
-        return self._update(request, pk, partial=True)
-
-    def _update(self, request, pk, partial):
         post = self.get_object(pk)
         if post.author != request.user:
             return Response({'detail': 'You can edit only your own posts.'}, status=status.HTTP_403_FORBIDDEN)
-        serializer = PostSerializer(post, data=request.data, partial=partial, context={'request': request})
+        serializer = PostSerializer(post, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -108,6 +106,33 @@ class PostDetailView(APIView):
             return Response({'detail': 'You can delete only your own posts.'}, status=status.HTTP_403_FORBIDDEN)
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CommentListCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(Post, pk=post_id)
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(post=post, author=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ToggleLikeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(Post, pk=post_id)
+        like = Like.objects.filter(post=post, user=request.user).first()
+        if like:
+            like.delete()
+            return Response({'message': 'Like removed.'})
+        serializer = LikeSerializer(data={'post': post.id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save(post=post, user=request.user)
+        return Response({'message': 'Like added.'}, status=status.HTTP_201_CREATED)
 
 
 class UserProfileView(APIView):
@@ -166,3 +191,31 @@ class AvatarUploadView(APIView):
             profile.avatar = None
             profile.save()
         return Response({'message': 'Avatar removed.'})
+
+
+class PollVoteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(Post, pk=post_id)
+        poll = getattr(post, 'poll', None)
+        if poll is None:
+            return Response({'detail': 'This post has no poll.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            option_id = int(request.data.get('option_id'))
+        except (TypeError, ValueError):
+            return Response({'detail': 'option_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        option = PollOption.objects.filter(poll=poll, pk=option_id).first()
+        if option is None:
+            return Response({'detail': 'Option does not belong to this poll.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        existing = PollVote.objects.filter(poll=poll, user=request.user).first()
+        if existing:
+            if existing.option_id == option.id:
+                existing.delete()
+                return Response({'message': 'Vote removed.', 'my_vote_option_id': None})
+            existing.option = option
+            existing.save()
+            return Response({'message': 'Vote switched.', 'my_vote_option_id': option.id})
+        PollVote.objects.create(poll=poll, option=option, user=request.user)
+        return Response({'message': 'Vote added.', 'my_vote_option_id': option.id}, status=status.HTTP_201_CREATED)
