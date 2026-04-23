@@ -1,0 +1,18 @@
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="navbar-brand" routerLink="/feed">Echo<span>.</span></a>
+    <a class="nav-link" routerLink="/feed">Feed</a>
+    <a class="nav-link" routerLink="/create">New Post</a>
+    @if (!authService.isLoggedIn()) {
+      <a class="nav-link" routerLink="/login">Login</a>
+    }
+    @if (authService.isLoggedIn()) {
+      <a class="nav-link" routerLink="/profile">Profile</a>
+    }
+    <button class="theme-toggle" (click)="toggleTheme()" [title]="isDark ? 'Light mode' : 'Dark mode'">
+      {{ isDark ? '☀️' : '🌙' }}
+    </button>
+  </div>
+</nav>
+
+<router-outlet></router-outlet>

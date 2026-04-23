@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+/backend/local_settings.py
+
+# Node / Angular
+node_modules/
+/frontend/dist/
+/frontend/.angular/
+/frontend/tmp/
+/frontend/out-tsc/
+/frontend/bazel-out/
+npm-debug.log
+yarn-error.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local

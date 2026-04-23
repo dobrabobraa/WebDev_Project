@@ -1,0 +1,197 @@
+{
+  "info": {
+    "name": "Tiny Social Network",
+    "_postman_id": "c7f26ef4-4b22-48fb-b56f-274c3c57d4a2",
+    "description": "Postman collection for Tiny Social Network API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "access",
+      "value": ""
+    },
+    {
+      "key": "refresh",
+      "value": ""
+    },
+    {
+      "key": "postId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"student1\", \"password\": \"1234\"}"
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"student1\", \"password\": \"1234\"}"
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/logout/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"refresh\": \"{{refresh}}\"}"
+        }
+      }
+    },
+    {
+      "name": "Get Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/categories/"
+      }
+    },
+    {
+      "name": "Get Posts",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/posts/"
+      }
+    },
+    {
+      "name": "Create Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}"
+          }
+        ],
+        "url": "{{baseUrl}}/posts/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"text\": \"My first anonymous post\", \"category\": 1}"
+        }
+      }
+    },
+    {
+      "name": "Get Single Post",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/posts/{{postId}}/"
+      }
+    },
+    {
+      "name": "Update Post",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}"
+          }
+        ],
+        "url": "{{baseUrl}}/posts/{{postId}}/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"text\": \"Updated anonymous post\", \"category\": 1}"
+        }
+      }
+    },
+    {
+      "name": "Delete Post",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}"
+          }
+        ],
+        "url": "{{baseUrl}}/posts/{{postId}}/"
+      }
+    },
+    {
+      "name": "Add Comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}"
+          }
+        ],
+        "url": "{{baseUrl}}/posts/{{postId}}/comments/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"text\": \"Nice anonymous post!\"}"
+        }
+      }
+    },
+    {
+      "name": "Toggle Like",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access}}"
+          }
+        ],
+        "url": "{{baseUrl}}/posts/{{postId}}/like/",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      }
+    }
+  ]
+}

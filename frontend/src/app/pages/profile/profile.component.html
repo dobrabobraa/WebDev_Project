@@ -1,0 +1,87 @@
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">Profile</div>
+    <div class="page-subtitle">
+      @if (profile?.is_self) { Your account } @else if (profile) { Viewing &#64;{{ profile.username }} } @else { Account information }
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-box">{{ errorMessage }}</div>
+  }
+
+  @if (loading) {
+    <div class="card empty-state">
+      <div class="empty-state-text">Loading…</div>
+    </div>
+  } @else if (profile) {
+    <div class="card profile-card">
+      @if (profile.avatar) {
+        <img class="profile-avatar-img" [src]="profile.avatar" alt="avatar" />
+      } @else {
+        <div class="profile-avatar">{{ getInitial() }}</div>
+      }
+
+      <div class="profile-username">&#64;{{ profile.username }}</div>
+
+      @if (profile.is_self) {
+        <div class="profile-label">Signed in as</div>
+
+        <div class="avatar-controls">
+          <label class="btn btn-ghost btn-sm">
+            {{ uploading ? 'Uploading…' : (profile.avatar ? 'Change avatar' : 'Upload avatar') }}
+            <input type="file" accept="image/*" (change)="onAvatarSelected($event)" [disabled]="uploading" hidden />
+          </label>
+          @if (profile.avatar) {
+            <button class="btn btn-danger btn-sm" (click)="removeAvatar()" [disabled]="uploading">Remove</button>
+          }
+        </div>
+      } @else if (authService.isLoggedIn()) {
+        <div class="avatar-controls">
+          <button
+            class="btn btn-sm"
+            [class.btn-ghost]="profile.is_following"
+            [class.btn-primary]="!profile.is_following"
+            (click)="toggleFollow()">
+            {{ profile.is_following ? 'Unfollow' : 'Follow' }}
+          </button>
+        </div>
+      }
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.posts_count }}</div>
+          <div class="stat-label">{{ profile.posts_count === 1 ? 'Post' : 'Posts' }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.likes_received }}</div>
+          <div class="stat-label">{{ profile.likes_received === 1 ? 'Like' : 'Likes' }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.followers_count }}</div>
+          <div class="stat-label">{{ profile.followers_count === 1 ? 'Follower' : 'Followers' }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ profile.following_count }}</div>
+          <div class="stat-label">Following</div>
+        </div>
+        <div class="stat-item stat-item-wide">
+          <div class="stat-value">{{ profile.comments_count }}</div>
+          <div class="stat-label">{{ profile.comments_count === 1 ? 'Comment' : 'Comments' }}</div>
+        </div>
+      </div>
+
+      @if (profile.is_self) {
+        <div class="profile-actions">
+          <button class="btn btn-danger" (click)="logout()">Logout</button>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="card empty-state">
+      <div class="empty-state-icon">👤</div>
+      <div class="empty-state-text">You are not logged in.</div>
+      <a class="btn btn-ghost" routerLink="/login" style="margin-top:12px;">Go to Login</a>
+    </div>
+  }
+</div>

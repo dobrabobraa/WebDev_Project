@@ -1,0 +1,30 @@
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-subtitle">Login or create a new anonymous account</div>
+
+    @if (errorMessage) {
+      <div class="error-box">{{ errorMessage }}</div>
+    }
+
+    <div class="form-group">
+      <label>Username</label>
+      <input class="input" [(ngModel)]="username" placeholder="Enter username" (keyup.enter)="login()" />
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input class="input" [(ngModel)]="password" type="password" placeholder="Enter password" (keyup.enter)="login()" />
+    </div>
+
+    <button class="btn btn-primary btn-full" (click)="login()">Login</button>
+
+    <div class="auth-divider">
+      <div class="auth-divider-line"></div>
+      <span class="auth-divider-text">or</span>
+      <div class="auth-divider-line"></div>
+    </div>
+
+    <button class="btn btn-ghost btn-full" (click)="register()">Create account</button>
+  </div>
+</div>
