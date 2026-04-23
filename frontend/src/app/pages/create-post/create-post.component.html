@@ -1,0 +1,84 @@
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">New Post</div>
+    <div class="page-subtitle">Share something with the world.</div>
+  </div>
+
+  <div class="card" style="max-width: 640px;">
+    @if (errorMessage) {
+      <div class="error-box">{{ errorMessage }}</div>
+    }
+
+    <div class="form-group">
+      <label>Title</label>
+      <input class="input" type="text" [(ngModel)]="title" placeholder="A short, punchy title" maxlength="200" />
+    </div>
+
+    <div class="form-group">
+      <label>What's on your mind?</label>
+      <textarea class="input" [(ngModel)]="text" placeholder="Write something… Tip: type @username to mention someone" rows="6"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Hashtags <span class="label-optional">(optional)</span></label>
+      <input class="input" type="text" [(ngModel)]="hashtagsRaw" placeholder="#python #django cool" />
+      <div class="form-hint">Separate with spaces or commas. # is optional.</div>
+      @if (parseHashtags().length) {
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+          @for (tag of parseHashtags(); track tag) {
+            <span class="category-badge">#{{ tag }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Media upload -->
+    <div class="form-group">
+      <label>Images & videos <span class="label-optional">(optional)</span></label>
+      <label class="btn btn-ghost btn-sm media-upload-label">
+        <span>+ Add files</span>
+        <input type="file" accept="image/*,video/*" multiple (change)="onFilesSelected($event)" hidden />
+      </label>
+      @if (mediaPreviews.length) {
+        <div class="media-preview-grid">
+          @for (m of mediaPreviews; track m.url; let i = $index) {
+            <div class="media-preview-item">
+              @if (m.kind === 'image') {
+                <img [src]="m.url" alt="preview" />
+              } @else {
+                <video [src]="m.url" controls></video>
+              }
+              <button type="button" class="media-preview-remove" (click)="removeMedia(i)" title="Remove">×</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Poll -->
+    <div class="form-group">
+      <label style="display:flex; align-items:center; gap:8px;">
+        <span>Poll <span class="label-optional">(optional)</span></span>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="togglePoll()" style="margin-left:auto;">
+          {{ showPoll ? 'Remove poll' : '+ Add poll' }}
+        </button>
+      </label>
+      @if (showPoll) {
+        <div class="poll-builder">
+          <input class="input" type="text" [(ngModel)]="pollQuestion" placeholder="Poll question" maxlength="300" style="margin-bottom: 10px;" />
+          <textarea class="input textarea-sm" [(ngModel)]="pollOptionsRaw" placeholder="One option per line&#10;Option A&#10;Option B&#10;Option C" rows="4"></textarea>
+          <div class="form-hint" style="margin-top:8px;">
+            Minimum 2 options. Max 10. One per line.
+            @if (parsePollOptions().length) {
+              · <span style="color:var(--accent);">{{ parsePollOptions().length }} {{ parsePollOptions().length === 1 ? 'option' : 'options' }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <button class="btn btn-primary" (click)="createPost()" [disabled]="saving" style="min-width: 140px;">
+      {{ saving ? 'Publishing…' : 'Publish' }}
+    </button>
+  </div>
+</div>

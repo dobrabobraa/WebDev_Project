@@ -1,0 +1,66 @@
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">Feed</div>
+    <div class="page-subtitle">See what others are sharing.</div>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-box">{{ errorMessage }}</div>
+  }
+
+  @if (!posts.length) {
+    <div class="card empty-state">
+      <div class="empty-state-icon">💬</div>
+      <div class="empty-state-text">No posts yet. Be the first to share something.</div>
+    </div>
+  }
+
+  @for (post of posts; track post.id) {
+    <a class="card post-preview-card" [routerLink]="['/posts', post.id]">
+      @if (post.media && post.media.length) {
+        <div class="post-preview-media">
+          @if (post.media[0].kind === 'image') {
+            <img [src]="post.media[0].url" alt="post preview" />
+          } @else {
+            <video [src]="post.media[0].url" preload="metadata" muted></video>
+            <div class="post-preview-media-badge">▶ video</div>
+          }
+          @if (post.media.length > 1) {
+            <div class="post-preview-media-count">+{{ post.media.length - 1 }}</div>
+          }
+        </div>
+      }
+
+      <h2 class="post-title">{{ post.title }}</h2>
+
+      <div class="post-preview-meta">
+        <span class="author-row author-row-sm">
+          @if (post.author_avatar) {
+            <img class="author-avatar author-avatar-sm" [src]="post.author_avatar" alt="avatar" />
+          } @else {
+            <div class="author-avatar author-avatar-sm author-avatar-fallback">{{ post.author_username.charAt(0).toUpperCase() }}</div>
+          }
+          <span class="post-author">&#64;{{ post.author_username }}</span>
+        </span>
+
+        <span class="post-stat">♥ {{ post.likes_count }}</span>
+        <span class="post-stat">💬 {{ post.comments_count }}</span>
+        @if (post.poll) {
+          <span class="post-stat">📊 poll</span>
+        }
+        <span class="post-stat post-stat-muted">{{ post.created_at | date:'MMM d, y' }}</span>
+        @if (post.updated_at && post.updated_at !== post.created_at) {
+          <span class="post-stat post-stat-muted" style="font-style: italic;">edited</span>
+        }
+      </div>
+
+      @if (post.hashtags && post.hashtags.length) {
+        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;">
+          @for (tag of post.hashtags; track tag) {
+            <span class="category-badge">#{{ tag }}</span>
+          }
+        </div>
+      }
+    </a>
+  }
+</div>

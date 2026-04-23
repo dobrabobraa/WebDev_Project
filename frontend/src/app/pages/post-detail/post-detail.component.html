@@ -1,0 +1,165 @@
+<div class="container">
+  <div class="page-header">
+    <a class="back-link" routerLink="/feed">← Back to feed</a>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-box">{{ errorMessage }}</div>
+  }
+
+  @if (loading) {
+    <div class="card empty-state">
+      <div class="empty-state-text">Loading…</div>
+    </div>
+  } @else if (post) {
+    <div class="card post-card">
+      <a class="author-row" [routerLink]="['/profile', post.author_username]">
+        @if (post.author_avatar) {
+          <img class="author-avatar" [src]="post.author_avatar" alt="avatar" />
+        } @else {
+          <div class="author-avatar author-avatar-fallback">{{ post.author_username.charAt(0).toUpperCase() }}</div>
+        }
+        <div class="post-author">&#64;{{ post.author_username }}</div>
+      </a>
+
+      @if (isEditing) {
+        <div class="edit-form">
+          <input class="input" [(ngModel)]="editTitle" placeholder="Title" style="margin-bottom: 10px;" />
+          <textarea class="input" [(ngModel)]="editText" placeholder="Post body" rows="6" style="resize: vertical; margin-bottom: 10px;"></textarea>
+          <input class="input" [(ngModel)]="editHashtagsRaw" placeholder="#python #django cool" style="margin-bottom: 6px;" />
+          <div style="font-size:12px; color:var(--text-3); margin-bottom:10px;">
+            Separate with spaces or commas. # is optional. Media and polls can't be edited.
+          </div>
+          @if (parseHashtags(editHashtagsRaw).length) {
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+              @for (tag of parseHashtags(editHashtagsRaw); track tag) {
+                <span class="category-badge">#{{ tag }}</span>
+              }
+            </div>
+          }
+          <div class="post-actions">
+            <button class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="saving">
+              {{ saving ? 'Saving…' : 'Save changes' }}
+            </button>
+            <button class="btn btn-ghost btn-sm" (click)="cancelEdit()" [disabled]="saving">Cancel</button>
+          </div>
+        </div>
+      } @else {
+        <h1 class="post-title post-title-full">{{ post.title }}</h1>
+
+        <div class="post-body post-body-full">
+          @for (frag of renderFragments(post.text); track $index) {
+            @if (frag.type === 'mention') {
+              <a class="mention-link" [routerLink]="['/profile', frag.username]">{{ frag.value }}</a>
+            } @else {
+              <span>{{ frag.value }}</span>
+            }
+          }
+        </div>
+
+        @if (post.media && post.media.length) {
+          <div class="media-grid" [class.media-grid-1]="post.media.length === 1">
+            @for (m of post.media; track m.id) {
+              <div class="media-item">
+                @if (m.kind === 'image') {
+                  <img [src]="m.url" alt="post media" />
+                } @else {
+                  <video [src]="m.url" controls preload="metadata"></video>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (post.poll) {
+          <div class="poll-block">
+            <div class="poll-question">{{ post.poll.question }}</div>
+            @for (opt of post.poll.options; track opt.id) {
+              <button
+                type="button"
+                class="poll-option"
+                [class.poll-option-mine]="post.poll!.my_vote_option_id === opt.id"
+                [disabled]="votingOptionId !== null"
+                (click)="vote(opt)">
+                <span class="poll-option-bar" [style.width.%]="percent(opt)"></span>
+                <span class="poll-option-content">
+                  <span class="poll-option-text">
+                    @if (post.poll!.my_vote_option_id === opt.id) { ✓ }
+                    {{ opt.text }}
+                  </span>
+                  <span class="poll-option-stats">
+                    {{ opt.votes_count }} · {{ percent(opt) }}%
+                  </span>
+                </span>
+              </button>
+            }
+            <div class="poll-total">{{ post.poll.total_votes }} {{ post.poll.total_votes === 1 ? 'vote' : 'votes' }}</div>
+          </div>
+        }
+
+        <div class="post-meta">
+          <span class="post-meta-text">{{ post.created_at | date:'MMM d, y · h:mm a' }}</span>
+          @if (post.updated_at && post.updated_at !== post.created_at) {
+            <span class="post-meta-text" style="font-style: italic; color: var(--text-3);">
+              · edited {{ post.updated_at | date:'MMM d, y · h:mm a' }}
+            </span>
+          }
+        </div>
+
+        @if (post.hashtags && post.hashtags.length) {
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+            @for (tag of post.hashtags; track tag) {
+              <span class="category-badge">#{{ tag }}</span>
+            }
+          </div>
+        }
+
+        <div class="post-actions">
+          <button class="btn btn-like btn-sm" (click)="likePost()">
+            ♥ {{ post.likes_count }} {{ post.likes_count === 1 ? 'like' : 'likes' }}
+          </button>
+          @if (isMyPost()) {
+            <button class="btn btn-ghost btn-sm" (click)="startEdit()">Edit</button>
+            <button class="btn btn-danger btn-sm" (click)="deletePost()">Delete</button>
+          }
+        </div>
+      }
+
+      <div class="comments-section">
+        <div class="comments-title">{{ post.comments_count }} {{ post.comments_count === 1 ? 'comment' : 'comments' }}</div>
+
+        @for (comment of post.comments; track comment.id) {
+          <div class="comment-item">
+            <a class="author-row author-row-sm" [routerLink]="['/profile', comment.author_username]">
+              @if (comment.author_avatar) {
+                <img class="author-avatar author-avatar-sm" [src]="comment.author_avatar" alt="avatar" />
+              } @else {
+                <div class="author-avatar author-avatar-sm author-avatar-fallback">{{ comment.author_username.charAt(0).toUpperCase() }}</div>
+              }
+              <div class="comment-author">&#64;{{ comment.author_username }}</div>
+            </a>
+            <div class="comment-text">
+              @for (frag of renderFragments(comment.text); track $index) {
+                @if (frag.type === 'mention') {
+                  <a class="mention-link" [routerLink]="['/profile', frag.username]">{{ frag.value }}</a>
+                } @else {
+                  <span>{{ frag.value }}</span>
+                }
+              }
+            </div>
+            <div class="comment-meta">{{ comment.created_at | date:'MMM d · h:mm a' }}</div>
+          </div>
+        }
+
+        @if (!post.comments.length) {
+          <p style="font-size:13px; color:var(--text-3); margin-bottom:10px;">No comments yet.</p>
+        }
+
+        <div class="comment-input-row">
+          <input class="input" [(ngModel)]="commentDraft" placeholder="Add a comment… (type @name to mention)" (keyup.enter)="addComment()" />
+          <button class="btn btn-ghost btn-sm" (click)="addComment()">Post</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
